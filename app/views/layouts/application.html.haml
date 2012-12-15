@@ -1,0 +1,19 @@
+!!!
+%html
+  %head
+    %title Twittalytics
+    = stylesheet_link_tag    "application", :media => "all"
+    = javascript_include_tag "application"
+    = csrf_meta_tags
+  .container
+    .page-header
+      .h1{:style => "font-size:28px; color:#336600;"}
+        BoTree Consulting - TweetGrabber
+        = image_tag('twitter-bird-white-on-blue.png',
+            :size => "40x40",
+            :class => "img-circle")
+  %body
+    - unless flash[:error].nil?
+      %error
+        = flash[:error]
+    = yield

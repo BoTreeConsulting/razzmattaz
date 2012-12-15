@@ -1,0 +1,24 @@
+- if !@tweets_retweets_arr.empty?
+  .row
+    .span4
+      .well
+        Tweet Id
+    .span4
+      .well
+        Tweet Text
+    .span4
+      .well
+        Retweet Ids
+  - @tweets_retweets_arr.each do |tweets_retweets|
+    .row
+      .span4
+        = tweets_retweets.tweet_id
+      .span4
+        = tweets_retweets.text
+      .span4
+        = tweets_retweets.retweet_ids
+    %br
+- else
+  %tr
+    %td
+      No Tweets Founds in the given range
