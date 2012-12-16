@@ -1,5 +1,7 @@
 class HomeController < ApplicationController
 
+  require 'uri'
+
   def create
     auth = request.env["omniauth.auth"]
     user = User.find_by_provider_and_uid(auth.provider, auth.uid)
@@ -23,7 +25,7 @@ class HomeController < ApplicationController
   def process_tweets
 
     retweets = Array.new
-    retweet_ids = Array.new
+
     @tweets_retweets_arr = Array.new
 
     twitter = Twitter::Client.new(:oauth_token => current_user.token,
@@ -32,26 +34,28 @@ class HomeController < ApplicationController
     tweets = twitter.user_timeline(params[:twitter_handle], :page => 1, :count => 5)
 
     tweets.each do |tweet|
-      retweet_ids = []
-      retweets = []
-
-      begin
-        retweets = twitter.retweets(tweet.id)
-      rescue Exception => e
-        puts "Error while fetching Retweets - #{e.message}"
-      end
-
-      retweets.each do |retweet|
-        retweet_ids << retweet.id
-      end
-
-      tweets_retweets = TweetsRetweets.new(tweet.id, tweet.text, retweet_ids)
+      tweet_embedded_urls = URI.extract(tweet.text)
+      retweet_ids = get_retweet_ids(twitter, tweet.id)
+      tweets_retweets = TweetsRetweets.new(tweet.id, tweet.text, tweet_embedded_urls, retweet_ids)
       @tweets_retweets_arr << tweets_retweets
-
     end
 
     return @tweets_retweets_arr
 
+  end
+
+  def get_retweet_ids(twitter_client, id)
+    retweet_ids = Array.new
+    retweets = Array.new
+    begin
+      retweets = twitter_client.retweets(id)
+      retweets.each do |retweet|
+        retweet_ids << retweet.id
+      end
+    rescue Exception => e
+      puts "Error while fetching Retweets - #{e.message}"
+    end
+    retweet_ids
   end
 
 end

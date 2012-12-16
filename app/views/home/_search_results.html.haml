@@ -1,21 +1,26 @@
 - if !@tweets_retweets_arr.empty?
   .row
-    .span4
+    .span3
       .well
         Tweet Id
-    .span4
+    .span3
       .well
         Tweet Text
-    .span4
+    .span3
+      .well
+        Tweet URL
+    .span3
       .well
         Retweet Ids
   - @tweets_retweets_arr.each do |tweets_retweets|
     .row
-      .span4
+      .span3
         = tweets_retweets.tweet_id
-      .span4
-        = tweets_retweets.text
-      .span4
+      .span3
+        = tweets_retweets.tweet_text
+      .span3
+        = tweets_retweets.tweet_embedded_urls
+      .span3
         = tweets_retweets.retweet_ids
     %br
 - else
