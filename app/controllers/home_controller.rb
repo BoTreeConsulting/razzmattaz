@@ -22,40 +22,65 @@ class HomeController < ApplicationController
     redirect_to '/home/search'
   end
 
-  def process_tweets
-
-    retweets = Array.new
-
-    @tweets_retweets_arr = Array.new
-
+  def get_twitter_client
     twitter = Twitter::Client.new(:oauth_token => current_user.token,
                                   :oauth_token_secret => current_user.secret)
-
-    tweets = twitter.user_timeline(params[:twitter_handle], :page => 1, :count => 5)
-
-    tweets.each do |tweet|
-      tweet_embedded_urls = URI.extract(tweet.text)
-      retweet_ids = get_retweet_ids(twitter, tweet.id)
-      tweets_retweets = TweetsRetweets.new(tweet.id, tweet.text, tweet_embedded_urls, retweet_ids)
-      @tweets_retweets_arr << tweets_retweets
-    end
-
-    return @tweets_retweets_arr
-
   end
 
-  def get_retweet_ids(twitter_client, id)
-    retweet_ids = Array.new
-    retweets = Array.new
-    begin
-      retweets = twitter_client.retweets(id)
-      retweets.each do |retweet|
-        retweet_ids << retweet.id
+  def process_tweets
+    get_details
+  end
+
+  def get_details
+
+    @aaronjgs = Array.new
+
+    client = get_twitter_client
+    friends = client.friends(params[:twitter_handle])
+
+    count = 0
+
+    friends.each do |friend|
+
+      screen_name = friend.screen_name
+
+      if !friend.protected
+
+        total_tweets = friend.statuses_count
+        last_tweet_time = friend.status[:created_at]
+
+        if total_tweets > 200
+          page_number = total_tweets / 200
+        else
+          page_number = 1
+        end
+
+        if page_number > 16
+          first_tweet_time = "Not Available"
+        else
+          tweets = client.user_timeline(screen_name, :page => page_number, :count => 200)
+          first_tweet_time = tweets.last.created_at
+        end
+
+        logger.info "************"
+        logger.info page_number
+        logger.info total_tweets
+        logger.info "************"
+
+        aaronjg = Aaronjg.new(screen_name, total_tweets, first_tweet_time, last_tweet_time, "No")
+        @aaronjgs << aaronjg
+        count += 1
+
+        if count == 3
+          break
+        end
+      else
+        aaronjg = Aaronjg.new(screen_name, "Not Available", "Not Available", "Not Available", "Yes")
+        @aaronjgs << aaronjg
       end
-    rescue Exception => e
-      puts "Error while fetching Retweets - #{e.message}"
     end
-    retweet_ids
-  end
 
+    return @aaronjgs
+
+  end
 end
